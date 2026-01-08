@@ -1,0 +1,25 @@
+name: Flask CI/CD (No Docker)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/cicd-pipeline
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements.txt
+            pkill gunicorn || true
+            gunicorn main:app -b 0.0.0.0:5000 --daemon
